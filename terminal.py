@@ -9,15 +9,19 @@ class Terminal:
     matrix = None
     memory = {}
 
-    def output(self, output: str, showPath: bool):
-        if showPath: print(self.path + f"{output}")
-        else: print(" " * len(self.path) + f"{output}")
+    def output(self, output: str):
+        print(" " * len(self.path) + f"{output}")
 
     def outputMatrix(self, matrix: Matrix):
         row = ""
-        for i in matrix.data:
-            for j in i: row += str(j) + " "
-            self.output(row, False)
+        matrix = matrix.round()
+        lens = []
+        for i in matrix.transpose().data:
+            lens.append(max(map(lambda x: len(str(x)), [j for j in i])))
+        for i in range(matrix.height):
+            for j in range(matrix.width):
+                row += " " * (lens[j] - len(str(matrix.data[i][j])) + 1) + str(matrix.data[i][j])
+            print(" " * (len(self.path) - lens[0]) + row)
             row = ""
 
     def changePath(self, newPath: str):
@@ -67,7 +71,7 @@ class Terminal:
 
             elif inp[0] == "dt":
                 if self.path == "Matan/Matrix> ":
-                    self.output(self.matrix.determinant(), False)
+                    self.output(self.matrix.determinant())
 
             elif inp[0] == "new":
                 if self.path == "Matan/Matrix> ":
@@ -81,7 +85,7 @@ class Terminal:
                 if self.path == "Matan/Matrix> ":
                     temp = []
                     for j in range(height):
-                        temp.append(list(map(int, inp[j * self.matrix.width + 1:j * self.matrix.width + self.matrix.width + 1])))
+                        temp.append(list(map(float, inp[j * self.matrix.width + 1:j * self.matrix.width + self.matrix.width + 1])))
                     self.outputMatrix(self.matrix + Matrix(self.matrix.width, self.matrix.height, temp))
                     if "-s" in inp:
                         self.matrix += Matrix(self.matrix.width, self.matrix.height, temp)
@@ -90,7 +94,7 @@ class Terminal:
                 if self.path == "Matan/Matrix> ":
                     temp = []
                     for j in range(height):
-                        temp.append(list(map(int, inp[j * self.matrix.width + 1:j * self.matrix.width + self.matrix.width + 1])))
+                        temp.append(list(map(float, inp[j * self.matrix.width + 1:j * self.matrix.width + self.matrix.width + 1])))
                         self.outputMatrix(self.matrix - Matrix(self.matrix.width, self.matrix.height, temp))
                     if "-s" in inp:
                         self.matrix -= Matrix(self.matrix.width, self.matrix.height, temp)
@@ -128,43 +132,17 @@ class Terminal:
                     if "-s" in inp:
                         self.matrix = self.matrix.inverse()
             
-            elif inp[0] =="stair":
+            elif inp[0] == "stair":
                 if self.path == "Matan/Matrix> ":
                     self.outputMatrix(self.matrix.stair())
                     if "-s" in inp:
                         self.matrix = self.matrix.stair()
+            
+            elif inp[0] == "rang":
+                if self.path == "Matan/Matrix> ":
+                    self.output(self.matrix.rang())
 
             elif inp[0] == "remember":
                 if self.path == "Matan/Matrix> ":
                     self.memory[inp[1]] = self.matrix
-
-            elif inp[0] == "set":
-                if self.path == "Matan/Matrix> ":
-                    self.matrix = self.memory[inp[1]]
-
-            elif inp[0] == "out":
-                if type(self.memory[inp[1]]) == Matrix:
-                    self.outputMatrix(self.memory[inp[1]])
-
-            elif inp[0] == "calc":
-                if self.path == "Matan/Matrix> ":
-                    inp[1] = inp[1].replace("/", "*1/").replace("-", "+-")
-                    res = self.calculate(inp[1], "matrix")
-                    if type(res) == int:
-                        self.output(res, False)
-                    elif type(res) == Matrix:
-                        if inp[-1] == "-s":
-                            self.matrix = res
-                        self.outputMatrix(res)
-
-            elif inp[0] == "cramer":
-                equations = inp[1:]
-                self.output(" ".join(list(map(str, Cramer(equations)))), False)
-
-            elif inp[0] == "gauss":
-                equations = inp[1:]
-                self.output(" ".join(list(map(str, Gauss(equations)))), False)
-
-            elif inp[0] == "ieqs":
-                equations = inp[1:]
-                self.output(" ".join(list(map(str, inverseMatrix(equations)))), False)
+ 

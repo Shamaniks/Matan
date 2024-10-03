@@ -34,34 +34,36 @@ class Matrix:
             newData.append(tempRow)
         return Matrix(other.height, self.height, newData)
     
-    def __index__(self, index: int):
-        return self[index].copy()
-    
-    def __call__(self):
-        return copy.deepcopy(self.data)
+    def round(self):
+        newData = copy.deepcopy(self.data)
+        for i in range(self.height):
+            for j in range(self.width):
+                if round(newData[i][j], 0) == newData[i][j]:
+                    newData[i][j] = int(newData[i][j])
+        return Matrix(self.width, self.height, newData)
     
     def transpose(self):
-        new = []
+        newData = []
         for j in range(self.width):
             temp = []
             for i in range(self.height):
                 temp.append(self.data[i][j])
-            new.append(temp)
-        return Matrix(self.height, self.width, new)
+            newData.append(temp)
+        return Matrix(self.height, self.width, newData)
     
     def mul(self, num: float):
-        new = copy.deepcopy(self.data)
+        newData = copy.deepcopy(self.data)
         for i in range(self.height):
             for j in range(self.width):
-                new[i][j] = new[i][j] * num
-        return Matrix(self.height, self.width, new)
+                newData[i][j] = newData[i][j] * num
+        return Matrix(self.height, self.width, newData)
     
     def minor(self, i: int, j: int):
-        result = copy.deepcopy(self.data)
-        result.pop(j)
-        for x in result:
+        newData = copy.deepcopy(self.data)
+        newData.pop(j)
+        for x in newData:
             x.pop(i)
-        return Matrix(self.width - 1, self.height - 1, result)
+        return Matrix(self.width - 1, self.height - 1, newData)
 
     def determinant(self):
         data = copy.deepcopy(self.data)
@@ -84,7 +86,6 @@ class Matrix:
         return Matrix(self.width, self.height, newData)
 
     def addition(self):
-        data = copy.deepcopy(self.data)
         newData = []
 
         for j in range(self.height):
@@ -121,7 +122,7 @@ class Matrix:
         while (column < self.height):
             current_row = None
             for r in range(column, self.height):
-                if current_row is None or ((abs(new.data[r][column]) > abs(new.data[current_row][column])) ^ (new.data[r][column] == 1)):
+                if current_row is None or abs(new.data[r][column]) > abs(new.data[current_row][column]):
                     current_row = r
             if current_row != column:
                 new = new.swapRows(current_row, column)
@@ -130,3 +131,11 @@ class Matrix:
                 new = new.combineRows(r, column, -new.data[r][column])
             column += 1
         return new
+    
+    def rang(self):
+        stair = self.stair()
+        result = 0
+        for i in stair.data:
+            if any(i):
+                result += 1
+        return result

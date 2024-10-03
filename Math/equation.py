@@ -46,36 +46,22 @@ def inverseMatrix(equations: list):
 
 def Gauss(equations: list):
     nomials, results = parseToMatrix(equations)
+    data = []
     height = len(nomials)
-    for i in range(len(results)):
-        nomials[i].append(results[i])
-
-    def swapRows(nomials: list, results: list, j1: int, j2: int):
-        nomials[j1], nomials[j2], results[j1], results[j2] = nomials[j2], nomials[j1], results[j2], results[j1]
-    
-    def divideRow(nomials: list, results: list, j: int, divider: float):
-        nomials[j] = [a / divider for a in nomials[j]]
-        results[j] /= divider
-    
-    def combineRows(nomials: list, results: list, j1: int, j2: int, weight: float):
-        nomials[j1] = [(a + k * weight) for a, k in zip(nomials[j1], nomials[j2])]
-        results[j1] += results[j2] * weight
-    
-    column = 0
-    while (column < height):
-        current_row = None
-        for r in range(column, height):
-            if current_row is None or abs(nomials[r][column]) > abs(nomials[current_row][column]):
-                current_row = r
-        if current_row is None:
-            return "Решений нет"
-        if current_row != column:
-            swapRows(nomials, results, current_row, column)
-        divideRow(nomials, results, column, nomials[column][column])
-        for r in range(column + 1, height):
-            combineRows(nomials, results, r, column, -nomials[r][column])
-        column += 1
-    X = [0 for i in results]
-    for i in range(height - 1, -1, -1):
-        X[i] = results[i] - sum(x * a for x, a in zip(X[(i + 1):], nomials[i][(i + 1):]))
-    return list(map(lambda x: round(x, 10), X))
+    for i in range(height):
+        temp = []
+        for j in range(height):
+            temp.append(nomials[i][j])
+        temp.append(results[i])
+        data.append(temp)
+    res = Matrix(height + 1, height, data).stair()
+    results = res.transpose().data[-1][::-1]
+    res = res.data[::-1]
+    result = [results[0]]
+    for i in range(1, height):
+        temp = res[i][:-1]
+        for j in range(1, height):
+            temp[j] *= results[j - 1]
+        temp.append(-results[i])
+        result.append(-sum(temp[1:]))
+    return result[::-1]
