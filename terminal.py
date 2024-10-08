@@ -54,6 +54,20 @@ class Terminal:
             if inp[0] == "exit":
                 self.path = "Matan> "
 
+            elif inp[0] == "remember":
+                if self.path == "Matan/Matrix> ":
+                    self.memory[inp[1]] = self.matrix
+            
+            elif inp[0] == "out":
+                if type(self.memory[inp[1]]) == Matrix:
+                    self.outputMatrix(self.memory[inp[1]])
+                else:
+                    self.output(self.memory[inp[1]])
+            
+            elif inp[0] == "set":
+                if self.path == "Matan/Matrix> ":
+                    self.matrix = self.memory[inp[1]]
+
             elif inp[0] == "matrix":
                 if self.path == "Matan> ":
                     temp = []
@@ -142,7 +156,18 @@ class Terminal:
                 if self.path == "Matan/Matrix> ":
                     self.output(self.matrix.rang())
 
-            elif inp[0] == "remember":
+
                 if self.path == "Matan/Matrix> ":
-                    self.memory[inp[1]] = self.matrix
+                    self.matrix = self.memory[inp[1]]
  
+            elif inp[0] == "cramer":
+                self.output(" ".join(map(str, Cramer(inp[1:]))))
+            
+            elif inp[0] == "invm":
+                self.output(" ".join(map(str, inverseMatrix(inp[1:]))))
+            
+            elif inp[0] == "gauss":
+                self.output(" ".join(map(str, Gauss(inp[1:]))))
+                
+            elif inp[0] == "symm":
+                self.output(" ".join(map(str, Equation(inp[1]).symmetric())))
