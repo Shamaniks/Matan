@@ -1,4 +1,6 @@
 import copy
+from fractions import Fraction
+from decimal import Decimal
 
 class Matrix:
     def __init__(self, width: int, height: int, data: list):
@@ -36,10 +38,19 @@ class Matrix:
     
     def round(self):
         newData = copy.deepcopy(self.data)
+        print(newData, self.height, self.width)
         for i in range(self.height):
             for j in range(self.width):
-                if round(newData[i][j], 0) == newData[i][j]:
-                    newData[i][j] = int(newData[i][j])
+                newData[i][j].normalize()
+        return Matrix(self.width, self.height, newData)
+
+    def toFrac(self):
+        newData = copy.deepcopy(self.data)
+        for i in range(self.height):
+            for j in range(self.height):
+                if newData % 1 != 0:
+                    frac = Fraction(newData[i][j]).limit_denominator()
+                    newData[i][j] = f"{frac.numerator}/{frac.denominator}"
         return Matrix(self.width, self.height, newData)
     
     def transpose(self):
@@ -51,7 +62,7 @@ class Matrix:
             newData.append(temp)
         return Matrix(self.height, self.width, newData)
     
-    def mul(self, num: float):
+    def mul(self, num: Decimal):
         newData = copy.deepcopy(self.data)
         for i in range(self.height):
             for j in range(self.width):
@@ -103,7 +114,7 @@ class Matrix:
         newData[j1], newData[j2] = newData[j2], newData[j1]
         return Matrix(self.width, self.height, newData)
     
-    def divideRow(self, j: int, divider: float):
+    def divideRow(self, j: int, divider: Decimal):
         newData = copy.deepcopy(self.data)
         try:
             newData[j] = [a / divider for a in newData[j]]
@@ -111,7 +122,7 @@ class Matrix:
         except ZeroDivisionError:
             return Matrix(self.width, self.height, newData)
     
-    def combineRows(self, j1: int, j2: int, weight: float):
+    def combineRows(self, j1: int, j2: int, weight: Decimal):
         newData = copy.deepcopy(self.data)
         newData[j1] = [(a + k * weight) for a, k in zip(newData[j1], newData[j2])]
         return Matrix(self.width, self.height, newData)

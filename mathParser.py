@@ -15,7 +15,7 @@ def parse(formulaString):
         yield float(number)
 
 
-def shunting_yard(parsedFormula):
+def shuntingYard(parsedFormula):
     stack = []
     for token in parsedFormula:
         if token in OPERATORS:
