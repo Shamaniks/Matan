@@ -44,49 +44,103 @@ class Terminal:
                     stack.append(i)
         return mathParser.calc(mathParser.shuntingYard(stack))
 
-    def division(self, divident: list, divider: list):
-        result = []
-        dfo = ""
-        for i in range(len(divident) - 1):
-            result.append(divident[i] / divider[0])
-            divident[i + 1] -= result[i] * divider[1]
-        
+    def division(self, dividend: list, divider: list) -> list:
+        """
+        Divide two polynomials represented as lists of coefficients.
+
+        Args:
+        dividend (list): The coefficients of the dividend polynomial.
+        divider (list): The coefficients of the divider polynomial.
+
+        Returns:
+        list: The coefficients of the result polynomial.
+        """
+        result, dividend = [], dividend.copy()
+        for i in range(len(dividend) - 1):
+            result.append(dividend[i] / divider[0])
+            dividend[i + 1] -= result[i] * divider[1]
+        result.append(dividend[-1] / divider[0])  # append the last result
         return result
                 
-    def divOutput(self, divident: list, divider: list, last: int = 0):
+    def divOutput(self, divident: list, divider: list = [], last: int = 0) -> str:
+        """
+        Prints a list of coefficients converted to a string representation of a polynomial.
+        
+        Args:
+        dividend (list): The coefficients of the polynomial dividend.
+        divider (list): The coefficients of the polynomial divider.
+        last (int, optional): The last index to consider. Defaults to 0.
+        
+        Returns:
+        result (str): The string form of polynomial
+        """
         output = ""
-        if last == 0: l = 0
-        else: l = last - 1
-        for i in range(len(divident) - 1, l, -1):
+        for i in range(len(divident) - 1, last, -1):
             if divident[::-1][i] == 1:
-                if i == 0: output += " + 1"
-                elif i == 1: output += " + x"
-                else: output += f" + x^{i}"
+                if i == 1: output += " + 1"
+                elif i == 2: output += " + x"
+                else: output += f" + x^{i - 1}"
             elif divident[::-1][i] == -1:
-                if i == 0: output += " - 1"
-                elif i == 1: output += " - x"
-                else: output += f" - x^{i}"
+                if i == 1: output += " - 1"
+                elif i == 2: output += " - x"
+                else: output += f" - x^{i - 1}"
             elif divident[::-1][i] != 1 and divident[::-1][i] != 0:
-                if i == 0: output += f" + {divident[::-1][i]}"
-                elif i == 1: output += f" + {divident[::-1][i]}x"
-                else: output += f" + {divident[::-1][i]}x^{i}"
-        outDiv = ""
-        for i in range(len(divider) - 1, -1, -1):
-            if divider[::-1][i] == 1:
-                if i == 0: outDiv += " + 1"
-                elif i == 1: outDiv += " + x"
-                else: outDiv += f" + x^{i}"
-            elif divider[::-1][i] == -1:
-                if i == 0: outDiv += " - 1"
-                elif i == 1: outDiv += " - x"
-                else: outDiv += f" - x^{i}"
-            elif divider[::-1][i] != 1 and divider[::-1][i] != 0:
-                if i == 0: outDiv += f" + {divider[::-1][i]}"
-                elif i == 1: outDiv += f" + {divider[::-1][i]}x"
-                else: outDiv += f" + {divider[::-1][i]}x^{i}"
-        if last == 0: self.output(f"({outDiv[3:]})({output[3:]}) + {divident[-1]}".replace(" + -", " - "))
-        else: self.output(f"({outDiv[3:]})({output[3:]}) + {divident[-1]}".replace(" + -", " - "))
-                    
+                if i == 1: output += f" + {divident[::-1][i]}"
+                elif i == 2: output += f" + {divident[::-1][i]}x"
+                else: output += f" + {divident[::-1][i]}x^{i - 1}"
+        if divider:
+            outDiv = ""
+            for i in range(len(divider) - 1, -1, -1):
+                if divider[::-1][i] == 1:
+                    if i == 0: outDiv += " + 1"
+                    elif i == 1: outDiv += " + x"
+                    else: outDiv += f" + x^{i}"
+                elif divider[::-1][i] == -1:
+                    if i == 0: outDiv += " - 1"
+                    elif i == 1: outDiv += " - x"
+                    else: outDiv += f" - x^{i}"
+                elif divider[::-1][i] != 1 and divider[::-1][i] != 0:
+                    if i == 0: outDiv += f" + {divider[::-1][i]}"
+                    elif i == 1: outDiv += f" + {divider[::-1][i]}x"
+                    else: outDiv += f" + {divider[::-1][i]}x^{i}"
+            return f"({outDiv[3:]})({output[3:]}) + {divident[-1]}".replace(" + -", " - ").replace(" + 0", "")
+        else:
+            return f"({output[3:]}) + {divident[-1]}".replace(" + 0", "")
+    def factorio(self, polyNoimal: list) -> list:
+        a, b = polyNoimal[0], polyNoimal[-1]
+        dividersA, dividersB = [], []
+        output = ""
+        for i in range(1, int(round(a ** Decimal(0.5), 0)) + 2):
+            if a % Decimal(i) == 0:
+                dividersA.append(Decimal(i))
+        for i in range(1, int(round(b ** Decimal(0.5), 0)) + 2):
+            if b % Decimal(i) == 0:
+                dividersB.append(Decimal(i))
+        dividersA += list(map(lambda x: -x, dividersA.copy()))
+        dividersB += list(map(lambda x: -x, dividersB.copy()))
+        for q in dividersA:
+            for p in dividersB:
+                shorter = self.division(polyNoimal, [1, (p/q)])
+                if len(polyNoimal) == 2:
+                    if p/q % 1 != 0:
+                        frac = Fraction(polyNoimal[1]).limit_denominator()
+                        output += f"({polyNoimal[0]}x + {frac.numerator}{frac.denominator})".replace(" + -", " - ")
+                    else:
+                        output += f"({polyNoimal[0]}x + {polyNoimal[1]})".replace(" + -", " - ")
+                    break
+                if shorter[-1] == 0:
+                    polyNoimal = shorter
+                    if p/q % 1 != 0:
+                        frac = Fraction(p/q).limit_denominator()
+                        output += f"(x + {frac.numerator}{frac.denominator})".replace(" + -", " - ")
+                    else:
+                        output += f"(x + {p/q})".replace(" + -", " - ")
+        if len(list(filter(lambda x: x != 0, polyNoimal.copy()))) <= 2:
+            self.output(output) 
+        else: 
+            output += self.divOutput(polyNoimal)
+            self.output(output)
+            
     def mainLoop(self):
         while True:
             inp = input(self.path).split()
@@ -215,4 +269,10 @@ class Terminal:
                 self.output(" ".join(map(str, Equation(inp[1]).symmetric())))
             
             elif inp[0] == "div":
-                self.divOutput(self.division(list(map(Decimal, inp[1].replace("-", "+-").split("+"))), list(map(Decimal, inp[2].replace("-", "+-").split("+")))), list(map(Decimal, inp[2].replace("-", "+-").split("+"))), int(inp[3]))
+                dividend = list(map(Decimal, inp[1].replace("-", "+-").split("+")))
+                divider =  list(map(Decimal, inp[2].replace("-", "+-").split("+")))
+                result = self.division(dividend, divider)
+                self.output(self.divOutput(result, divider, len(dividend) - len(result)))
+            
+            elif inp[0] == "fact":
+                self.factorio(list(map(Decimal, inp[1].replace("-", "+-").split("+"))))
