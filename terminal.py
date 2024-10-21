@@ -2,17 +2,37 @@ from decimal import Decimal
 
 from Math.matrix import Matrix
 from Math.equation import *
+from Math.polynomial import Polynomial, parseFromString
 import mathParser
 
 class Terminal:
-    path = "Matan> "
-    matrix = None
-    memory = {}
+    path: str = "Matan> "
+    matrix: Matrix = None
+    memory: dict = {}
+    polynomial: Polynomial = None
 
-    def output(self, output: str):
+    def output(self, output: str) -> None:
+        """
+        Prints the output string with indentation based on self.path
+        
+        Args:
+        output (str): The string to be printed
+        
+        Return:
+        None
+        """
         print(" " * len(self.path) + f"{output}")
 
-    def outputMatrix(self, matrix: Matrix):
+    def outputMatrix(self, matrix: Matrix) -> None:
+        """
+        Prints the matrix with indentation based on self.path and with indentation between columns
+        
+        Args:
+        matrix (Matrix): The matrix to be printed
+        
+        Return:
+        None
+        """
         row = ""
         matrix = matrix.round()
         lens = []
@@ -24,10 +44,29 @@ class Terminal:
             print(" " * (len(self.path) - lens[0]) + row)
             row = ""
 
-    def changePath(self, newPath: str):
+    def changePath(self, newPath: str) -> None:
+        """
+        Changes the path of the terminal
+
+        Args:
+        newPath (str): The new path
+        
+        Return:
+        None
+        """
         self.path = "Matan/" + newPath + "> "
 
     def calculate(self, calculation: str, context: str):
+        """
+        Calculates the result of the calculation with variables and prints it
+
+        Args:
+        calculation (str): The calculation to be done
+        context (str): The context for right calculation
+        
+        Return:
+        Any
+        """
         if context == "matrix":
             stack = []
             scalar = ""
@@ -45,16 +84,6 @@ class Terminal:
         return mathParser.calc(mathParser.shuntingYard(stack))
 
     def division(self, dividend: list, divider: list) -> list:
-        """
-        Divide two polynomials represented as lists of coefficients.
-
-        Args:
-        dividend (list): The coefficients of the dividend polynomial.
-        divider (list): The coefficients of the divider polynomial.
-
-        Returns:
-        list: The coefficients of the result polynomial.
-        """
         result, dividend = [], dividend.copy()
         for i in range(len(dividend) - 1):
             result.append(dividend[i] / divider[0])
@@ -106,7 +135,8 @@ class Terminal:
             return f"({outDiv[3:]})({output[3:]}) + {divident[-1]}".replace(" + -", " - ").replace(" + 0", "")
         else:
             return f"({output[3:]}) + {divident[-1]}".replace(" + 0", "")
-    def factorio(self, polyNoimal: list) -> list:
+
+    def factorio(self, polyNoimal: list) -> None:
         a, b = polyNoimal[0], polyNoimal[-1]
         dividersA, dividersB = [], []
         output = ""
@@ -140,10 +170,25 @@ class Terminal:
         else: 
             output += self.divOutput(polyNoimal)
             self.output(output)
-            
-    def mainLoop(self):
+    
+    def Gorner(self, polyNomial: list, divider: Decimal) -> None:        
+        result = [polyNomial[0]]
+        for i in range(1, len(polyNomial)):
+            result.append(divider * result[i - 1] + polyNomial[i])
+        self.output(self.divOutput(result, [1, -divider], len(polyNomial) - len(result)))
+        
+    def mainLoop(self) -> None:
+        """
+        Loops through the main menu
+        
+        Args:
+        None
+        
+        Return:
+        None
+        """
         while True:
-            inp = input(self.path).split()
+            inp: list = input(self.path).split()
             if inp[0] == "stop":
                 break
 
@@ -268,11 +313,23 @@ class Terminal:
             elif inp[0] == "symm":
                 self.output(" ".join(map(str, Equation(inp[1]).symmetric())))
             
-            elif inp[0] == "div":
-                dividend = list(map(Decimal, inp[1].replace("-", "+-").split("+")))
-                divider =  list(map(Decimal, inp[2].replace("-", "+-").split("+")))
-                result = self.division(dividend, divider)
-                self.output(self.divOutput(result, divider, len(dividend) - len(result)))
+            elif inp[0] == "poly":
+                if self.path == "Matan> ":
+                    self.poly = Polynomial(parseFromString(inp[1]))
+                    self.changePath("Polynomial")
+                elif self.path == "Matan/Polynomial> ":
+                    self.output(str(self.poly))
             
+            elif inp[0] == "div":
+                self.output(self.poly / Polynomial(parseFromString(inp[1])))
+                if "-s" in inp:
+                    self.poly /= Polynomial(parseFromString(inp[1]))
+                
+            elif inp[0] == "gorner":
+                self.output(self.poly.Gorner(Decimal(inp[1])))
+                if "-s" in inp:
+                    self.poly = self.Gorner(Decimal(inp[1]))
+                
             elif inp[0] == "fact":
-                self.factorio(list(map(Decimal, inp[1].replace("-", "+-").split("+"))))
+                self.output(self.poly.factorio())
+                
