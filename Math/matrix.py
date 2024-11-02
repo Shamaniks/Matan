@@ -1,74 +1,115 @@
 import copy
-from fractions import Fraction
-from decimal import Decimal
+import sympy as sp
 
+from decimal import Decimal
 class Matrix:
     def __init__(self, width: int, height: int, data: list):
         self.width: int = width
         self.height: int = height
         self.data: list = data
     
+    def __str__(self) -> str:
+        """
+        Converts matrix to string with space between columns
+        """
+        res = []
+        lens = []
+        for i in self.transpose().data:
+            lens.append(max(map(lambda x: len(str(x)), [j for j in i])))
+        for i in range(self.height):
+            row = ""
+            for j in range(self.width):
+                row += " " * (lens[j] - len(str(self.data[i][j])) + 1) + str(self.data[i][j])
+            res.append(row)
+        return "\n".join(res)
+
     def __add__(self, other):
-        new = Matrix(self.width, self.height, copy.deepcopy(self.data))
+        """
+        Adds one matrix to another.
+        
+        Args:
+        self (Matrix): The first matrix
+        other (Matrix): The second matrix
+        
+        Return: The sum of matrixes
+        """
+        newData = copy.deepcopy(self.data)
         for i in range(self.height):
             for j in range(self.width):
-                new.data[i][j] = self.data[i][j] + other.data[i][j]
-        return new
+                newData[i][j] += other.data[i][j]
+        return Matrix(self.width, self.height, newData)
     
     def __sub__(self, other):
-        new = Matrix(self.width, self.height, copy.deepcopy(self.data))
+        """
+        Adds one matrix to another.
+        
+        Args:
+        self (Matrix): The first matrix
+        other (Matrix): The second matrix
+        
+        Return: The sum of matrixes
+        """
+        newData = copy.deepcopy(self.data)
         for i in range(self.height):
             for j in range(self.width):
-                new.data[i][j] -= other.data[i][j]
-        return new
-    
+                newData[i][j] -= other.data[i][j]
+        return Matrix(self.width, self.height, newData)
+
     def __mul__(self, other):
-        other = other.transpose()
+        """
+        Multiplies two matrixes.
+        
+        Args:
+        self (Matrix): The first matrix to multiply
+        other (Matrix): The second matrix to multiply
+        
+        Return: The multiplied matrix
+        """
         newData = []
-
-        for i in range(self.height):
-            tempRow = []
-            for j in range(other.height):
-                tempEl = 0
-                for k in range(self.width):
-                    tempEl += self.data[i][k] * other.data[j][k]
-                tempRow.append(tempEl)
-            newData.append(tempRow)
-        return Matrix(other.height, self.height, newData)
+        other = other.transpose()
+        for height in range(other.height):
+            row = []
+            for width in range(self.height):
+                el = 0
+                for i in range(other.width):
+                    el += self.data[width][i] * other.data[height][i]
+                row.append(el)
+            newData.append(row)
+        return Matrix(width + 1, height + 1, newData).transpose()
     
-    def round(self):
+    def determinant(self) -> str:
         """
-        Rounds all elements in the matrix to the nearest integer.
-
+        Calculates determinant of the matrix
+        
         Args:
         None
         
-        Return:
-        Matrix: The matrix with all elements rounded to the nearest integer.
+        Return: The determinant of the matrix
         """
+        data = copy.deepcopy(self.data)
+        if self.width == 2 and self.height == 2:
+            return data[0][0] * data[1][1] - data[1][0] * data[0][1]
+        elif self.width == 1 and self.height == 1:
+            return data[0][0]
+        else:
+            result = 0
+            for i in range(self.height):
+                result += self.addition(0, i) * data[0][i]
+            return result
+
+    def minor(self, row:int, col:int):
+        newData = copy.deepcopy(self.data)
+        newData.pop(row)
+        for i in range(self.height - 1):
+            newData[i].pop(col)
+        return Matrix(self.width - 1, self.height - 1, newData)
+    
+    def replaceColumn(self, new:list, col:int):
         newData = copy.deepcopy(self.data)
         for i in range(self.height):
-            for j in range(self.width):
-                newData[i][j].normalize()
+            newData[i][col] = new[i]
         return Matrix(self.width, self.height, newData)
-
-    def toFrac(self):
-        """
-        Converts all elements in the matrix to fractions.
-
-        Args:
-        None
         
-        Return:
-        Matrix: The matrix with all elements converted to fractions.
-        """
-        newData = copy.deepcopy(self.data)
-        for i in range(self.height):
-            for j in range(self.height):
-                if newData % 1 != 0:
-                    frac = Fraction(newData[i][j]).limit_denominator()
-                    newData[i][j] = f"{frac.numerator}/{frac.denominator}"
-        return Matrix(self.width, self.height, newData)
     def transpose(self):
         """
         Transposes the matrix.
@@ -80,150 +121,59 @@ class Matrix:
         Matrix: The transposed matrix.
         """
         newData = []
-        for j in range(self.width):
-            temp = []
-            for i in range(self.height):
-                temp.append(self.data[i][j])
-            newData.append(temp)
+        for i in range(self.width):
+            row = []
+            for j in range(self.height):
+                row.append(self.data[j][i])
+            newData.append(row)
         return Matrix(self.height, self.width, newData)
-    
-    def mul(self, num: Decimal):
+
+    def mul(self, weight):
         """
-        Multiplies matrix by scalar.
+        Multiplies matrix on weight.
         
         Args:
-        num (Decimal): The scalar to multiply the matrix by.
+        weight: The weight of multiplication
         
-        Return:
-        Matrix: The matrix multiplied by the scalar.
+        Return: The multiplied matrix
         """
         newData = copy.deepcopy(self.data)
         for i in range(self.height):
             for j in range(self.width):
-                newData[i][j] = newData[i][j] * num
-        return Matrix(self.height, self.width, newData)
-    
-    def minor(self, i: int, j: int):
-        """
-        Selects part of the matrix to calculate the determinant.
-
-        Args:
-        i (int): The column to select.
-        j (int): The row to select.
-        
-        Return:
-        Matrix: The selected part of the matrix.
-        """
-        newData = copy.deepcopy(self.data)
-        newData.pop(j)
-        for x in newData:
-            x.pop(i)
-        return Matrix(self.width - 1, self.height - 1, newData)
-
-    def determinant(self) -> Decimal:
-        """
-        Calculates determinant of the matrix
-        
-        Args:
-        None
-        
-        Return:
-        Decimal: The determinant of the matrix
-        """
-        data = copy.deepcopy(self.data)
-        if self.width == 2 and self.height == 2:
-            return data[0][0] * data[1][1] - data[0][1] * data[1][0]
-        elif self.width == 1 and self.height == 1:
-            return data[0][0]
-        else:
-            result = 0
-            for i in range(self.height):
-                result += data[i][0] * self.minor(0, i).determinant() * (-1)**i
-            return result
-
-    def replaceColumn(self, newColumn: list, column: int):
-        """
-        Replaces a column in the matrix with a new one.
-
-        Args:
-        newColumn (list): The new column to replace.
-        column (int): The column to replace.
-        
-        Return:
-        Matrix: The matrix with the new column.
-        """
-        newData = copy.deepcopy(self.data)
-        for i in range(self.height):
-            for j in range(self.width):
-                if (j == column):
-                    newData[i][j] = newColumn[i]
+                newData[i][j] *= weight
         return Matrix(self.width, self.height, newData)
 
-    def addition(self):
-        """
-        Converts all elements of the matrix to their addition
-        
-        Args:
-        None
-        
-        Return:
-        Matrix: The matrix with all elements's additions
-
-        """
-        newData = []
-
-        for j in range(self.height):
-            temp = []
-            for i in range(self.width):
-                temp.append(self.minor(i, j).determinant() * (-1)**(i+j+2))
-            newData.append(temp)
-        return Matrix(self.width, self.height, newData).transpose()
-    
-    def inverse(self):
-        """
-        Inverses the matrix
-
-        Args:
-        None
-        
-        Return:
-        Matrix: The inversed matrix
-        """
-        return Matrix(self.width, self.height, self.data).addition().mul(1 / self.determinant())
-    
     def swapRows(self, j1: int, j2: int):
         """
         Swaps rows of the matrix
-        
+
         Args:
         j1 (int): The first row to swap.
         j2 (int): The second row to swap.
-        
-        Return:
-        Matrix: The matrix with the rows swapped.
+
+        Return: The matrix with the rows swapped.
         """
         newData = copy.deepcopy(self.data)
         newData[j1], newData[j2] = newData[j2], newData[j1]
         return Matrix(self.width, self.height, newData)
-    
-    def divideRow(self, j: int, divider: Decimal):
+
+    def divideRow(self, j: int, divider):
         """
         Divides row of the matrix
-        
+
         Args:
         j (int): The row to divide.
-        divider (Decimal): The divider.
-        
-        Return:
-        Matrix: The matrix with the row divided.
+        divider (sp.S): The divider.
+
+        Return: The matrix with the row divided.
         """
         newData = copy.deepcopy(self.data)
-        try:
-            newData[j] = [a / divider for a in newData[j]]
+        if divider == 0:
+            # If the divider is 0, we cannot divide, return the matrix unchanged
             return Matrix(self.width, self.height, newData)
-        except ZeroDivisionError:
-            return Matrix(self.width, self.height, newData)
-    
+        newData[j] = [sp.Rational(sp.S(str(a)), sp.S(str(divider))) for a in newData[j]]
+        return Matrix(self.width, self.height, newData)
+
     def combineRows(self, j1: int, j2: int, weight: Decimal):
         """
         Combines rows of the matrix
@@ -233,56 +183,84 @@ class Matrix:
         j2 (int): The row to combine with.
         weight (Decimal): The weight of the second row.
 
-        Return:
-        Matrix: The matrix with the rows combined.
-
+        Return: The matrix with the rows combined.
         """
         newData = copy.deepcopy(self.data)
-        newData[j1] = [(a + k * weight) for a, k in zip(newData[j1], newData[j2])]
+        newData[j1] = [sp.simplify(f"{a}+{k}*{weight}") for a, k in zip(newData[j1], newData[j2])]
         return Matrix(self.width, self.height, newData)
-    
-    def stair(self):
+
+    def echelon(self):
         """
-        Calculates stair of the matrix
+        Calculates echelon of the matrix
 
         Args:
         None
-        
-        Return:
-        Matrix: The matrix with the stair calculated.
+
+        Return: The matrix's echelon calculated.
         """
-        new_matrix = Matrix(self.width, self.height, copy.deepcopy(self.data))
+        newMatrix = Matrix(self.width, self.height, copy.deepcopy(self.data))
         for col in range(self.height):
-            # Find the row with the largest absolute value in the current column
-            max_row = max(range(col, self.height), key=lambda r: abs(new_matrix.data[r][col]))
-            
-            # Swap the current row with the row having the largest absolute value
+            max_row = max(range(col, self.height), key=lambda r: abs(newMatrix.data[r][col]))
+            if abs(newMatrix.data[max_row][col]) < 1e-10:  # Check for near-zero
+                continue 
             if max_row != col:
-                new_matrix = new_matrix.swapRows(max_row, col)
-            
-            # Divide the current row by the pivot element
-            new_matrix = new_matrix.divideRow(col, new_matrix.data[col][col])
-            
-            # Eliminate the current column in the rows below and above
-            for row in range(self.height):
-                if row != col:
-                    new_matrix = new_matrix.combineRows(row, col, -new_matrix.data[row][col])
+                newMatrix = newMatrix.swapRows(max_row, col)
+            newMatrix = newMatrix.divideRow(col, newMatrix.data[col][col])
+            for row in range(col + 1, self.height):  # Start from the next row
+                newMatrix = newMatrix.combineRows(row, col, -newMatrix.data[row][col])
+        return newMatrix
+
+    def addition(self, row: int, col:int):
+        """
+        Calculates algebraic addition of matrix element
         
-        return new_matrix
+        Args:
+        col (int): The column index of element
+        row (int): The row index of element
+        
+        Return: The algebraic addition of matrix element
+        """
+        return self.minor(row, col).determinant() * (-1) ** (col + row)
+    
+    def additionMatrix(self):
+        """
+        Converst all elements of matrix to their algebraic additions
+        
+        Args:
+        None
+        
+        Return: The matrix with algebraic additions
+        """
+        newData = copy.deepcopy(self.data)
+        for i in range(self.height):
+            for j in range(self.width):
+                newData[i][j] = self.addition(i, j)
+        return Matrix(self.width, self.height, newData)
+
+    def inverse(self):
+        """
+        Calcates inversed version of matrix
+        
+        Args:
+        None
+        
+        Return: The inversed matrix
+        """
+        return Matrix(self.width, self.height, copy.deepcopy(self.data)).additionMatrix().transpose().mul(1 / self.determinant())
     
     def rang(self):
         """
-        Calculates rang of the matrix
-
-        Args:
-        None        
+        Calculates rang of matrix
         
-        Return:
-        int: The rang of the matrix.
+        Args:
+        None
+        
+        Return: The rang of matrix
         """
-        stair = self.stair()
-        result = 0
-        for i in stair.data:
-            if any(i):
-                result += 1
-        return result
+        rang = self.height
+        echelon = self.echelon()
+        for i in range(self.height):
+            if echelon[i][i] == 0: rang += 1
+        return rang
+
+
