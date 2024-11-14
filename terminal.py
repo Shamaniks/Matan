@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import sympy as sp
 
 from Math.matrix import Matrix
@@ -79,7 +77,7 @@ class Terminal:
                 print("+")
 
             elif inp[0] == "minor":
-                if self.path == "Matan/Matrix> ":
+                if self.matrix:
                     self.outputMatrix(self.matrix.minor(int(inp[1]) - 1, int(inp[2]) - 1))
 
             elif inp[0] == "dt":
@@ -143,6 +141,11 @@ class Terminal:
                     if "-s" in inp:
                         self.matrix = res
  
+            elif inp[0] == "rang":
+                if self.matrix:
+                    res = self.matrix.rang()
+                    print(f"+\n| {res}\n+")
+ 
             elif inp[0] == "cramer":
                 print("+\n|", "\n| ".join(map(str, Cramer(inp[1:]))), "\n+")
             
@@ -162,33 +165,23 @@ class Terminal:
                 else:
                     print(f"| {res}")
                 print("+")
-            
-            elif inp[0] == "eq":
-                print("+\n|", "\n| ".join(map(lambda x: str(x), Equation(inp[1]).square())), "\n+")
                 
-            elif inp[0] == "symm":
-                self.output(" ".join(map(str, Equation(inp[1]).symmetric())))
-            
-            elif inp[0] == "cardano":
-                print("+\n|", "\n| ".join(map(lambda x: str(x), Equation(inp[1]).Cardano())), "\n+")
-            
             elif inp[0] == "poly":
-                if self.path == "Matan> ":
-                    self.poly = Polynomial(parseFromString(inp[1]))
-                    self.changePath("Polynomial")
-                elif self.path == "Matan/Polynomial> ":
-                    self.output(str(self.poly))
+                if not self.polynomial or len(inp) > 1:
+                    self.polynomial = Polynomial(parseFromString(inp[1]))
+                print(f"+\n| {self.polynomial}\n+")
             
             elif inp[0] == "div":
-                self.output(self.poly / Polynomial(parseFromString(inp[1])))
-                if "-s" in inp:
-                    self.poly /= Polynomial(parseFromString(inp[1]))
-                
-            elif inp[0] == "gorner":
-                self.output(self.poly.Gorner(Decimal(inp[1])))
-                if "-s" in inp:
-                    self.poly = self.Gorner(Decimal(inp[1]))
-                
+                if self.polynomial:
+                    res = self.polynomial / Polynomial(parseFromString(inp[1]))
+                    print(f"+\n| {res[0]}{res[1]} + {res[2]}\n+".replace(" + 0", "").replace("+ -", "- ").replace("(x)", "x"))
+                    if "-s" in inp:
+                        self.polynomial = res
+            
             elif inp[0] == "fact":
-                self.output(self.poly.factorio())
+                if self.polynomial:
+                    print("+\n|", "".join(map(str, self.polynomial.factorio())), "\n+")
                 
+            elif inp[0] == "solve":
+                if self.polynomial:
+                    print("+\n|", "\n| ".join(map(str, self.polynomial.solve())), "\n+")

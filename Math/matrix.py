@@ -171,7 +171,7 @@ class Matrix:
         if divider == 0:
             # If the divider is 0, we cannot divide, return the matrix unchanged
             return Matrix(self.width, self.height, newData)
-        newData[j] = [sp.Rational(sp.S(str(a)), sp.S(str(divider))) for a in newData[j]]
+        newData[j] = [a / divider for a in newData[j]]
         return Matrix(self.width, self.height, newData)
 
     def combineRows(self, j1: int, j2: int, weight: Decimal):
@@ -201,12 +201,12 @@ class Matrix:
         newMatrix = Matrix(self.width, self.height, copy.deepcopy(self.data))
         for col in range(self.height):
             max_row = max(range(col, self.height), key=lambda r: abs(newMatrix.data[r][col]))
-            if abs(newMatrix.data[max_row][col]) < 1e-10:  # Check for near-zero
+            if abs(newMatrix.data[max_row][col]) < 1e-10:
                 continue 
             if max_row != col:
                 newMatrix = newMatrix.swapRows(max_row, col)
             newMatrix = newMatrix.divideRow(col, newMatrix.data[col][col])
-            for row in range(col + 1, self.height):  # Start from the next row
+            for row in range(col + 1, self.height):
                 newMatrix = newMatrix.combineRows(row, col, -newMatrix.data[row][col])
         return newMatrix
 
@@ -257,10 +257,8 @@ class Matrix:
         
         Return: The rang of matrix
         """
-        rang = self.height
         echelon = self.echelon()
+        rang = self.height
         for i in range(self.height):
-            if echelon[i][i] == 0: rang += 1
+            if echelon.data[i][i] == 0: rang -= 1
         return rang
-
-
