@@ -135,31 +135,34 @@ class Polynomial:
         
         Return: roots of cubic equation    
         """
+        # cbrt(-q/2 + sqrt(D)) + cbrt(-q/2 - sqrt(D))
         a, b, c, d = self.coefficients.copy()
-        p = c - b ** 2 / (3 * a)
-        q = d - (b * c) / (3 * a) + (2 * b ** 3) / (27 * a ** 2)
-        D = (q / 2) ** 2 + (p / 3) ** 3
+        p = (c - b ** 2 / (3 * a)) / 3
+        q = (d - (b * c) / (3 * a) + (2 * b ** 3) / (27 * a ** 2)) / (-2)
+        D = q ** 2 + p ** 3
         r = b / (3 * a)
         print(sp.solve(str(self)))
         if D > 0:
-            u, v = sp.cbrt(-q / 2 + sp.sqrt(D)), sp.cbrt(-q / 2 - sp.sqrt(D))
+            D = sp.real_root(D, 2)
+            u, v = sp.real_root(q + D, 3), sp.real_root(q - D, 3)
             return [
                 u + v - r,
                 -((u + v) / 2) + (u - v) * (sp.sqrt(3) * sp.I / 2) - r,
                 -((u + v) / 2) - (u - v) * (sp.sqrt(3) * sp.I / 2) - r
-                ]
+            ]
         elif D == 0:
             return [
-                2 * sp.cbrt(-q / 2) - r,
-                sp.real_root(-(-q / 2), 3) - r
+                2 * sp.real_root(q, 3) - r,
+                sp.root(-q, 3, 0) - r
             ]
         elif D < 0:
-            theta = sp.acos(-q / (2 * sp.sqrt((-p / 3) ** 3)))
+            theta = sp.acos(q / (2 * sp.sqrt((-p) ** 3)))
             return [
-                2 * sp.sqrt(-p / 3) * sp.cos(theta / 3) - r,
-                2 * sp.sqrt(-p / 3) * sp.cos((theta + 2 * sp.pi) / 3) - r,
-                2 * sp.sqrt(-p / 3) * sp.cos((theta + 4 * sp.pi) / 3) - r 
+                2 * sp.sqrt(-p) * sp.cos(theta / 3) - r,
+                2 * sp.sqrt(-p) * sp.cos((theta + 2 * sp.pi) / 3) - r,
+                2 * sp.sqrt(-p) * sp.cos((theta + 4 * sp.pi) / 3) - r 
             ]
+    
     
     def Ferrari(self):
         """

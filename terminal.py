@@ -24,19 +24,15 @@ class Terminal:
         for i in range(height):
             data.append(list(map(sp.simplify, inp[width * i:width + width * i])))
         return Matrix(width, height, data)
+    
+    def outputList(self, out: list) -> None:
+        print("+")
+        for i in out:
+            print("|", i)
+        print("+")
 
     def outputMatrix(self, matrix: Matrix) -> None:
-        """
-        Prints the matrix with indentation based on self.path and with indentation between columns
-        
-        Args:
-        matrix (Matrix): The matrix to be printed
-        
-        Return:
-        None
-        """
-        for i in str(matrix).split("\n"):
-            print(f"|{i}")
+        self.outputList(str(matrix).split("\n"))
 
     def mainLoop(self) -> None:
         """
@@ -60,9 +56,8 @@ class Terminal:
             
             elif inp[0] == "out":
                 if type(self.memory[inp[1]]) == Matrix:
-                    print("+")
                     self.outputMatrix(self.memory[inp[1]])
-                    print("+")
+                    
             
             elif inp[0] == "set":
                 if self.path == "Matan/Matrix> ":
@@ -72,9 +67,8 @@ class Terminal:
                 if not self.matrix or len(inp) > 1:
                     self.matrix = self.inputMatrix(int(inp[1]), int(inp[2]), inp[3:])
                     self.context = "matrix"
-                print("+")
                 self.outputMatrix(self.matrix)
-                print("+")
+                
 
             elif inp[0] == "minor":
                 if self.matrix:
@@ -87,27 +81,21 @@ class Terminal:
             elif inp[0] == "tr":
                 if self.matrix:
                     res:Matrix = self.matrix.transpose()
-                    print("+")
                     self.outputMatrix(res)
-                    print("+")
                     if "-s" in inp:
                         self.matrix = res
 
             elif inp[0] == "add":
                 if self.matrix:
                     res = self.matrix + self.inputMatrix(self.matrix.width, self.matrix.height, inp[1:])
-                    print("+")
                     self.outputMatrix(res)
-                    print("+")
                     if "-s" in inp:
                         self.matrix = res
 
             elif inp[0] == "sub":
                 if self.matrix:
                     res = self.matrix - self.inputMatrix(self.matrix.width, self.matrix.height, inp[1:])
-                    print("+")
                     self.outputMatrix(res)
-                    print("+")
                     if "-s" in inp:
                         self.matrix = res
 
@@ -117,27 +105,21 @@ class Terminal:
                         res = self.matrix.mul(sp.S(inp[1]))
                     else:
                         res = self.matrix * self.inputMatrix(int(inp[1]), int(inp[2]), inp[3:])
-                    print("+")
                     self.outputMatrix(res)
-                    print("+")
                     if "-s" in inp:
                         self.matrix = res
             
             elif inp[0] == "ech":
                 if self.matrix:
                     res = self.matrix.echelon()
-                    print("+")
                     self.outputMatrix(res)
-                    print("+")
                     if "-s" in inp:
                         self.matrix = res
             
             elif inp[0] == "inv":
                 if self.matrix:
                     res = self.matrix.inverse()
-                    print("+")
                     self.outputMatrix(res)
-                    print("+")
                     if "-s" in inp:
                         self.matrix = res
  
@@ -147,24 +129,22 @@ class Terminal:
                     print(f"+\n| {res}\n+")
  
             elif inp[0] == "cramer":
-                print("+\n|", "\n| ".join(map(str, Cramer(inp[1:]))), "\n+")
-            
+                self.outputList(Cramer(inp[1:]))
+
             elif inp[0] == "invm":
-                print("+\n|", "\n| ".join(map(str, inverseMatrix(inp[1:]))), "\n+")
+                self.outputList(inverseMatrix(inp[1:]))
             
             elif inp[0] == "gauss":
-                print("+\n|", "\n| ".join(map(str, Gauss(inp[1:]))), "\n+")
+                self.outputList(Gauss(inp[1:]))
                 
             elif inp[0] == "calc":
-                print("+")
                 for i in self.memory.keys():
                     inp[1] = inp[1].replace(i, f"Matrix({self.memory[i].width}, {self.memory[i].height}, {self.memory[i].data})")
                 res = eval(inp[1])
                 if type(res) == Matrix:
                     self.outputMatrix(res)
                 else:
-                    print(f"| {res}")
-                print("+")
+                    print("|", res)
                 
             elif inp[0] == "poly":
                 if not self.polynomial or len(inp) > 1:
@@ -180,8 +160,8 @@ class Terminal:
             
             elif inp[0] == "fact":
                 if self.polynomial:
-                    print("+\n|", "".join(map(str, self.polynomial.factorio())), "\n+")
+                    print(f"+\n| {''.join(map(str, self.polynomial.factorio()))}\n+")
                 
             elif inp[0] == "solve":
                 if self.polynomial:
-                    print("+\n|", "\n| ".join(map(str, self.polynomial.solve())), "\n+")
+                    self.outputList(self.polynomial.solve())
